@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery with Copyable Text</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-gap: 20px;
+            margin-top: 20px;
+        }
+        .gallery-item {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+        .modal-image {
+            max-width: 90%;
+            max-height: 500px;
+            display: block;
+            margin: 0 auto 20px;
+        }
+        .copy-area {
+            display: flex;
+            margin-top: 20px;
+        }
+        .text-to-copy {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .copy-button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+        .success-message {
+            color: #4CAF50;
+            margin-top: 10px;
+            display: none;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .modal-content {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Flowchart/Chart Creations</h1>
+        <p>Click on any image to generate on chatGPT</p>
+    </div>
+
+    <div class="gallery" id="imageGallery">
+        <!-- Images will be loaded here from JavaScript -->
+    </div>
+
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModal">&times;</span>
+            <img class="modal-image" id="modalImage" src="" alt="">
+            <h3 id="modalTitle">Image Title</h3>
+            <div class="copy-area">
+                <div class="text-to-copy" id="textToCopy">This is the text that will be copied when the button is clicked.</div>
+                <button class="copy-button" id="copyButton">Copy Text</button>
+            </div>
+            <p class="success-message" id="copySuccess">Text copied to clipboard!</p>
+        </div>
+    </div>
+
+    <script>
+        // Financial chart data with real images
+        const galleryData = [
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Pie Chart Final.png",
+                title: "Asset Allocation Pie Chart",
+                text: "Create a pie chart similar to this client asset allocation showing Private Equity 10%, Domestic Cash 12.5%, Domestic Property 12.5%, Enhanced Yield 25%, Domestic Fixed Interest 20%, Infrastructure 20%"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Switch Platform Final.png",
+                title: "Investment Strategy Flowchart",
+                text: "Create a flowchart showing investment strategy with Direct Investments (incl Property) flowing to Australian Super accounts and Centuria LifeGoals Bond"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Rental Income.png",
+                title: "Super Rollover Diagram",
+                text: "Create a flowchart showing super rollover from QSuper to Macquarie Super Manager II with rental income contributions"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Super Fund with Lump Sums.png",
+                title: "Withdrawal Strategy",
+                text: "Create a diagram showing withdrawal strategy from Morley Super Fund accounts to cash account"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/SMSF Flowchart.png",
+                title: "SMSF Establishment",
+                text: "Create a comprehensive SMSF establishment and rollover diagram showing contributions from bank account"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Rollovers, Contribution Splitting and Savings Plan Flowchart.png",
+                title: "Contribution Splitting Strategy",
+                text: "Create a diagram showing super accounts with employment income and contribution splitting strategy"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Family Legacy Trust Flowchart.png",
+                title: "Family Trust Strategy",
+                text: "Create a flowchart showing family legacy trust structure with investments and distribution strategy"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/Regular Family Pension.png",
+                title: "Family Pension Plan",
+                text: "Create a flowchart for family pension arrangement showing account structure and investment options"
+            },
+            {
+                image: "C:/Users/AnthonyGorra/OneDrive - FIRST FINANCIAL PTY LTD/Desktop/family pension with drawdowns.png",
+                title: "Pension Drawdown Strategy",
+                text: "Create a Family Pension Plan diagram showing TRIS accounts and minimum withdrawal strategy"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Diversified Portfolio",
+                text: "Create a pie chart showing diversified investment portfolio with 30% Australian Equities, 30% International Equities, 20% Fixed Income, 10% Property, 5% Infrastructure, 5% Cash"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Retirement Income Strategy",
+                text: "Create a flowchart showing retirement income strategy with super, investment property and share portfolio income streams"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Insurance Coverage Plan",
+                text: "Create a diagram showing life insurance, TPD, income protection and trauma coverage amounts and premium costs"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Estate Planning Structure",
+                text: "Create a flowchart showing estate planning with testamentary trust, power of attorney, and binding death nominations"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Debt Reduction Strategy",
+                text: "Create a diagram showing debt reduction strategy for home loan, investment loan and personal loans with timeline"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Retirement Savings Projection",
+                text: "Create a chart showing retirement savings projection over 20 years with current balance $500,000 and annual contributions of $25,000"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Cash Flow Management",
+                text: "Create a Sankey diagram showing monthly cash flow with income sources, expenses, savings and investment allocations"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Tax Optimization Strategy",
+                text: "Create a flowchart showing tax optimization strategy using super contributions, investment bonds and trust structures"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Business Succession Plan",
+                text: "Create a diagram showing business succession plan with buy-sell agreement, key person insurance and transition timeline"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Education Funding Plan",
+                text: "Create a chart showing education funding strategy for two children using investment bonds, savings accounts and scholarship opportunities"
+            },
+            {
+                image: "/api/placeholder/400/300",
+                title: "Risk Profile Assessment",
+                text: "Create a spider chart showing risk profile assessment with dimensions for time horizon, income needs, market knowledge, risk tolerance and financial capacity"
+            }
+        ];
+
+        // Function to populate the gallery
+        function populateGallery() {
+            const gallery = document.getElementById('imageGallery');
+            
+            galleryData.forEach((item, index) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.setAttribute('data-index', index);
+                
+                const img = document.createElement('img');
+                img.src = item.image;
+                img.alt = item.title;
+                img.className = 'gallery-image';
+                
+                galleryItem.appendChild(img);
+                gallery.appendChild(galleryItem);
+                
+                galleryItem.addEventListener('click', () => openModal(index));
+            });
+        }
+
+        // Function to open modal with image and text
+        function openModal(index) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const textToCopy = document.getElementById('textToCopy');
+            const copySuccess = document.getElementById('copySuccess');
+            
+            const item = galleryData[index];
+            
+            modalImage.src = item.image;
+            modalImage.alt = item.title;
+            modalTitle.textContent = item.title;
+            textToCopy.textContent = item.text;
+            copySuccess.style.display = 'none';
+            
+            modal.style.display = 'flex';
+        }
+
+        // Function to close modal
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+        }
+
+        // Function to copy text
+        function copyText() {
+            const textToCopy = document.getElementById('textToCopy');
+            const copySuccess = document.getElementById('copySuccess');
+            
+            navigator.clipboard.writeText(textToCopy.textContent)
+                .then(() => {
+                    copySuccess.style.display = 'block';
+                    setTimeout(() => {
+                        copySuccess.style.display = 'none';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy text to clipboard');
+                });
+        }
+
+        // Initialize the gallery when the document is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            populateGallery();
+            
+            // Add event listeners
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('copyButton').addEventListener('click', copyText);
+            
+            // Close modal when clicking outside the content
+            document.getElementById('imageModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('imageModal')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
