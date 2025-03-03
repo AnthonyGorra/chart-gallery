@@ -1,435 +1,265 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Gallery with Copyable Text</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:wght@400;600;700&display=swap');
-        
-        body {
-            font-family: 'Amiri', serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #7E99A3; /* Light blue mixed with navy */
-            color: #4C585B;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-            border-bottom: 2px solid #4C585B;
-            padding-bottom: 20px;
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .header h1 {
-            font-family: 'Playfair Display', serif;
-            color: #000000; /* Changed to black */
-            margin-bottom: 5px;
-        }
-        
-        .header p {
-            color: #000000; /* Changed to black */
-            font-style: italic;
-        }
-        
-        .logo {
-            position: absolute;
-            right: 20px;
-            top: 50%; /* Center vertically */
-            transform: translateY(-50%);
-            max-width: 150px;
-            height: auto;
-        }
-        
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-gap: 30px;
-            margin-top: 20px;
-        }
-        
-        .gallery-item {
-            background-color: white; /* White background for card items */
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 15px 15px 20px 15px;
-        }
-        
-        .gallery-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-        }
-        
-        .gallery-image {
-            width: 100%;
-            height: 180px;
-            object-fit: contain;
-            margin-bottom: 15px;
-        }
-        
-        .gallery-title {
-            font-family: 'Playfair Display', serif;
-            font-weight: 600;
-            text-align: center;
-            font-size: 14px;
-            color: #000000; /* Changed to black */
-            margin: 0;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 80%;
-            max-height: 90%;
-            overflow: auto;
-            position: relative;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            border: 2px solid #4C585B;
-        }
-        
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #4C585B;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background-color: #f1f1f1;
-            transition: background-color 0.2s;
-        }
-        
-        .close-button:hover {
-            background-color: #e0e0e0;
-        }
-        
-        .modal-image {
-            max-width: 90%;
-            max-height: 500px;
-            display: block;
-            margin: 0 auto 25px;
-            border-radius: 5px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        
-        .modal h3 {
-            text-align: center;
-            font-family: 'Playfair Display', serif;
-            color: #4C585B;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .copy-area {
-            display: flex;
-            margin-top: 20px;
-        }
-        
-        .text-to-copy {
-            flex-grow: 1;
-            padding: 15px;
-            border: 1px solid #7E99A3;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .copy-button {
-            margin-left: 10px;
-            padding: 10px 15px;
-            background-color: #7E99A3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-family: 'Amiri', serif;
-        }
-        
-        .copy-button:hover {
-            background-color: #4C585B;
-        }
-        
-        .success-message {
-            color: #4CAF50;
-            margin-top: 10px;
-            display: none;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        @media (max-width: 1200px) {
-            .gallery {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        
-        @media (max-width: 992px) {
-            .gallery {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .gallery {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .modal-content {
-                max-width: 95%;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .gallery {
-                grid-template-columns: repeat(1, 1fr);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Chart Creations for SOA</h1>
-        <p>Created by Anthony Gorra</p>
-        <img src="First Financial Logo.png" alt="First Financial Logo" class="logo">
-    </div>
+// Financial chart data with detailed AI prompts
+const galleryData = [
+    {
+        image: "Pie Chart Final.png",
+        title: "Pie Chart Final",
+        text: `When you receive a Statement of Advice, identify the client's asset allocation percentages. Look for sections detailing:
+- Current investment portfolio breakdown
+- Recommended asset allocation
+- Percentage splits across asset classes (cash, fixed interest, property, Australian shares, international shares)
 
-    <div class="gallery" id="imageGallery">
-        <!-- Images will be loaded here from JavaScript -->
-    </div>
+Extract these percentages and create a pie chart showing the allocation. For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
 
-    <div class="modal" id="imageModal">
-        <div class="modal-content">
-            <span class="close-button" id="closeModal">&times;</span>
-            <img class="modal-image" id="modalImage" src="" alt="">
-            <h3 id="modalTitle">Image Title</h3>
-            <div class="copy-area">
-                <div class="text-to-copy" id="textToCopy">This is the text that will be copied when the button is clicked.</div>
-                <button class="copy-button" id="copyButton">Copy Text</button>
-            </div>
-            <p class="success-message" id="copySuccess">Text copied to clipboard!</p>
-        </div>
-    </div>
+Maintain all visual elements and styling of the original chart template while only updating the percentage values and labels as needed.`
+    },
+    {
+        image: "Withdrawal, Recontribution & Refresh.png",
+        title: "Withdrawal, Recontribution & Refresh",
+        text: `For this chart, analyze the SOA for:
+1. Client's superannuation withdrawal amount and date
+2. Tax component details (tax-free vs. taxable components)
+3. Recontribution strategy specifics:
+   - Withdrawal amount
+   - Tax implications
+   - Recontribution timing and method
+4. Refresh strategy details explaining how this improves the tax-free component ratio
 
-    <script>
-        // Financial chart data with real images
-        const galleryData = [
-            {
-                image: "Pie Chart Final.png",
-                title: "Pie Chart Final",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Withdrawal, Recontribution & Refresh.png",
-                title: "Withdrawal, Recontribution & Refresh",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Withdrawal & Recontribution to New Pension or Spouse.png",
-                title: "Withdrawal & Recontribution to New Pension or Spouse",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "SMSF with Accumulation & Pensions.png",
-                title: "SMSF with Accumulation & Pensions",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Rollover Super.png",
-                title: "Rollover Super",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Rollover & Commence Pension.png",
-                title: "Rollover & Commence Pension",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Lump Sum Debt Repayments, Downsizer Contribution, Residual to Bank.png",
-                title: "Lump Sum Debt Repayments, Downsizer Contribution, Residual to Bank",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "LRBA.png",
-                title: "LRBA",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Invest Lump Sum .png",
-                title: "Invest Lump Sum",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Downsizer Contribution.png",
-                title: "Downsizer Contribution",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Contributions.png",
-                title: "Contributions",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            },
-            {
-                image: "Cancel Insurance in Super.png",
-                title: "Cancel Insurance in Super",
-                text: "You will be given a Statement of Advice and will allocate the specific information to each flowchart. Send me back the full code for the new image with the altered information, and keep all the current structures and visuals intact. Here is the template code you will follow, only altering text that is not the head of the image."
-            }
-        ];
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
 
-        // Function to populate the gallery
-        function populateGallery() {
-            const gallery = document.getElementById('imageGallery');
-            
-            // Create an array of items to display (hide specific items and reorder as needed)
-            const displayItems = galleryData.filter(item => {
-                // Hide these specific items
-                const hideTitles = [
-                    "SMSF Establishment", 
-                    "Contribution Splitting Strategy", 
-                    "Family Trust Strategy", 
-                    "Family Pension Plan"
-                ];
-                // Make sure to keep "Super Rollover Diagram" with "Rental Income.png"
-                return !hideTitles.includes(item.title);
-            });
-            
-            // Reorder to put Pension Drawdown Strategy next to Withdrawal Strategy
-            const withdrawalIndex = displayItems.findIndex(item => item.title === "Withdrawal & Recontribution to New Pension or Spouse");
-            const drawdownIndex = displayItems.findIndex(item => item.title === "Rollover Super");
-            
-            if (withdrawalIndex !== -1 && drawdownIndex !== -1) {
-                // Remove drawdown from its current position
-                const drawdownItem = displayItems.splice(drawdownIndex, 1)[0];
-                // Insert it after the withdrawal strategy
-                displayItems.splice(withdrawalIndex + 1, 0, drawdownItem);
-            }
-            
-            // Create gallery items for display
-            displayItems.forEach((item, index) => {
-                const galleryItem = document.createElement('div');
-                galleryItem.className = 'gallery-item';
-                galleryItem.setAttribute('data-index', index);
-                
-                const img = document.createElement('img');
-                img.src = item.image;
-                img.alt = item.title;
-                img.className = 'gallery-image';
-                
-                const title = document.createElement('h3');
-                title.className = 'gallery-title';
-                title.textContent = item.title;
-                
-                galleryItem.appendChild(img);
-                galleryItem.appendChild(title);
-                gallery.appendChild(galleryItem);
-                
-                galleryItem.addEventListener('click', () => {
-                    // Find the original index in the full galleryData array
-                    const originalIndex = galleryData.findIndex(data => data.title === item.title);
-                    openModal(originalIndex);
-                });
-            });
-        }
+Maintain all visual elements and flow structure of the original chart template while updating only the financial data and client-specific information.`
+    },
+    {
+        image: "Withdrawal & Recontribution to New Pension or Spouse.png",
+        title: "Withdrawal & Recontribution to New Pension or Spouse",
+        text: `When analyzing the SOA, focus on:
+1. Client's superannuation withdrawal details (amount, timing, fund name)
+2. Whether the recontribution is directed to a spouse's account or a new pension account
+3. Tax component implications before and after the strategy
+4. Any age-based conditions or preservation requirements
 
-        // Function to open modal with image and text
-        function openModal(index) {
-            const modal = document.getElementById('imageModal');
-            const modalImage = document.getElementById('modalImage');
-            const modalTitle = document.getElementById('modalTitle');
-            const textToCopy = document.getElementById('textToCopy');
-            const copySuccess = document.getElementById('copySuccess');
-            
-            const item = galleryData[index];
-            
-            modalImage.src = item.image;
-            modalImage.alt = item.title;
-            modalTitle.textContent = item.title;
-            textToCopy.textContent = item.text;
-            copySuccess.style.display = 'none';
-            
-            modal.style.display = 'flex';
-        }
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
 
-        // Function to close modal
-        function closeModal() {
-            const modal = document.getElementById('imageModal');
-            modal.style.display = 'none';
-        }
+Maintain all visual elements and flow structure of the original chart template while updating only the financial data and client-specific information.`
+    },
+    {
+        image: "SMSF with Accumulation & Pensions.png",
+        title: "SMSF with Accumulation & Pensions",
+        text: `For this chart, extract from the SOA:
+1. SMSF name and trustee structure
+2. Account balances for both accumulation and pension accounts
+3. Asset allocation within the SMSF
+4. Transfer balance cap considerations
+5. Current contribution strategies
 
-        // Function to copy text
-        function copyText() {
-            const textToCopy = document.getElementById('textToCopy');
-            const copySuccess = document.getElementById('copySuccess');
-            
-            navigator.clipboard.writeText(textToCopy.textContent)
-                .then(() => {
-                    copySuccess.style.display = 'block';
-                    setTimeout(() => {
-                        copySuccess.style.display = 'none';
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error('Failed to copy text: ', err);
-                    alert('Failed to copy text to clipboard');
-                });
-        }
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
 
-        // Initialize the gallery when the document is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            populateGallery();
-            
-            // Add event listeners
-            document.getElementById('closeModal').addEventListener('click', closeModal);
-            document.getElementById('copyButton').addEventListener('click', copyText);
-            
-            // Close modal when clicking outside the content
-            document.getElementById('imageModal').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('imageModal')) {
-                    closeModal();
-                }
-            });
+Maintain all visual elements and flow structure of the original chart template while updating only the financial data and client-specific information.`
+    },
+    {
+        image: "Rollover Super.png",
+        title: "Rollover Super",
+        text: `When analyzing the SOA for a super rollover chart, identify:
+1. Source super fund name and current balance
+2. Destination super fund name
+3. Full or partial rollover amount
+4. Timing of the rollover
+5. Any insurance implications of the rollover
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the fund names, balances, and rollover-specific information.`
+    },
+    {
+        image: "Rollover & Commence Pension.png",
+        title: "Rollover & Commence Pension",
+        text: `For this chart, locate in the SOA:
+1. Source superannuation fund and balance
+2. Target pension fund
+3. Amount to be rolled over and converted to pension
+4. Pension commencement date
+5. Minimum drawdown requirements based on age
+6. Any preservation considerations
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the financial data and client-specific information.`
+    },
+    {
+        image: "Lump Sum Debt Repayments, Downsizer Contribution, Residual to Bank.png",
+        title: "Lump Sum Debt Repayments, Downsizer Contribution, Residual to Bank",
+        text: `When analyzing this complex strategy in the SOA, focus on:
+1. Source of lump sum (likely property sale)
+2. Total amount received
+3. Debt repayment details (mortgage, loans, etc.)
+4. Downsizer contribution amount (up to the eligible limit)
+5. Residual amount designated for banking/investment
+6. Age eligibility confirmation for downsizer contribution
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the dollar amounts, percentages, and client-specific information.`
+    },
+    {
+        image: "LRBA.png",
+        title: "LRBA",
+        text: `Extract from the SOA:
+1. SMSF name and trustee details
+2. Property/asset being purchased
+3. Loan amount and terms
+4. Holding trust structure
+5. Repayment strategy
+6. Compliance considerations
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the financial data and LRBA-specific information.`
+    },
+    {
+        image: "Invest Lump Sum .png",
+        title: "Invest Lump Sum",
+        text: `When analyzing the SOA for lump sum investment, identify:
+1. Source of funds (inheritance, property sale, etc.)
+2. Total amount to be invested
+3. Recommended investment vehicle (managed fund, direct shares, etc.)
+4. Asset allocation strategy
+5. Timeframe and investment objectives
+6. Any dollar cost averaging approach
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the financial data and investment-specific information.`
+    },
+    {
+        image: "Downsizer Contribution.png",
+        title: "Downsizer Contribution",
+        text: `For this chart, locate in the SOA:
+1. Property sale details (address, sale price, settlement date)
+2. Client's age verification (must be 55+ for eligibility)
+3. Contribution amount (up to the eligible limit)
+4. Target super fund
+5. Timing of the contribution
+6. Ownership verification (10+ year ownership requirement)
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the property details, contribution amounts, and client-specific information.`
+    },
+    {
+        image: "Contributions.png",
+        title: "Contributions",
+        text: `When analyzing contribution strategies in the SOA, focus on:
+1. Type of contributions (concessional, non-concessional, spouse, etc.)
+2. Contribution amounts and frequency
+3. Source of funds for contributions
+4. Contribution caps and eligibility
+5. Tax implications and benefits
+6. Total annual contribution strategy
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the contribution amounts, types, and client-specific information.`
+    },
+    {
+        image: "Cancel Insurance in Super.png",
+        title: "Cancel Insurance in Super",
+        text: `For this chart, extract from the SOA:
+1. Current super fund name
+2. Types of insurance being cancelled (life, TPD, income protection)
+3. Current premium amounts
+4. Reasoning for cancellation
+5. Alternative insurance arrangements (if any)
+6. Effective date of cancellation
+
+For any information not found in the SOA, use "[REDACTED]" as a placeholder. Do NOT ask for missing information - these placeholders will be manually edited later in the drawio app.
+
+Maintain all visual elements and flow structure of the original chart template while updating only the insurance details and client-specific information.`
+    }
+];
+
+// Function to populate the gallery
+function populateGallery() {
+    const gallery = document.getElementById('imageGallery');
+    
+    // Create gallery items for display
+    galleryData.forEach((item, index) => {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.setAttribute('data-index', index);
+        
+        const img = document.createElement('img');
+        img.src = item.image;
+        img.alt = item.title;
+        img.className = 'gallery-image';
+        
+        const title = document.createElement('h3');
+        title.className = 'gallery-title';
+        title.textContent = item.title;
+        
+        galleryItem.appendChild(img);
+        galleryItem.appendChild(title);
+        gallery.appendChild(galleryItem);
+        
+        galleryItem.addEventListener('click', () => {
+            openModal(index);
         });
-    </script>
-</body>
-</html>
+    });
+}
+
+// Function to open modal with image and text
+function openModal(index) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    const textToCopy = document.getElementById('textToCopy');
+    const copySuccess = document.getElementById('copySuccess');
+    
+    const item = galleryData[index];
+    
+    modalImage.src = item.image;
+    modalImage.alt = item.title;
+    modalTitle.textContent = item.title;
+    textToCopy.textContent = item.text;
+    copySuccess.style.display = 'none';
+    
+    modal.style.display = 'flex';
+}
+
+// Function to close modal
+function closeModal() {
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+}
+
+// Function to copy text
+function copyText() {
+    const textToCopy = document.getElementById('textToCopy');
+    const copySuccess = document.getElementById('copySuccess');
+    
+    navigator.clipboard.writeText(textToCopy.textContent)
+        .then(() => {
+            copySuccess.style.display = 'block';
+            setTimeout(() => {
+                copySuccess.style.display = 'none';
+            }, 2000);
+        })
+        .catch(err => {
+            console.error('Failed to copy text: ', err);
+            alert('Failed to copy text to clipboard');
+        });
+}
+
+// Initialize the gallery when the document is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    populateGallery();
+    
+    // Add event listeners
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('copyButton').addEventListener('click', copyText);
+    
+    // Close modal when clicking outside the content
+    document.getElementById('imageModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('imageModal')) {
+            closeModal();
+        }
+    });
+});
